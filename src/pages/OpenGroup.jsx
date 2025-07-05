@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 
+let REACT_APP_API_URL = import.meta.env.VITE_API_URL
+
 const OpenGroups = () => {
   const { user, token } = useAuth();
   const [groups, setGroups] = useState([]);
@@ -50,7 +52,7 @@ const OpenGroups = () => {
           return;
       }
 
-      const response = await axios.get('http://localhost:4009/api/groups', {
+      const response = await axios.get(`${REACT_APP_API_URL}/groups`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+let REACT_APP_API_URL = import.meta.env.VITE_API_URL
+
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -24,7 +26,7 @@ const Register = () => {
     setError('');
 
     try {
-      const response = await axios.post(`${REACT_APP_API_URL}/api/users/register`, formData);
+      const response = await axios.post(`${REACT_APP_API_URL}/users/register`, formData);
       setMessage(response.data.message + " You can now login.");
       setFormData({ // Clear form on successful registration
         name: '',

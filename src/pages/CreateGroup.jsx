@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+let REACT_APP_API_URL = import.meta.env.VITE_API_URL
 
 const CreateGroup = () => {
   const [groupName, setGroupName] = useState('');
@@ -66,7 +67,7 @@ const CreateGroup = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:4009/api/groups/create',
+        `${REACT_APP_API_URL}/groups/create`,
         payload,
         {
           headers: {

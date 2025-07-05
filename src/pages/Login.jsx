@@ -4,6 +4,8 @@ import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // CORRECTED: Import useAuth hook
 
+let REACT_APP_API_URL = import.meta.env.VITE_API_URL
+console.log(`API URL IS ${REACT_APP_API_URL}`)
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
@@ -24,7 +26,7 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await axios.post(`${REACT_APP_API_URL}/api/users/login`, formData);
+      const response = await axios.post(`${REACT_APP_API_URL}/users/login`, formData);
       setMessage(response.data.message);
       login(response.data.token);
       setFormData({ email: '', password: '' });
