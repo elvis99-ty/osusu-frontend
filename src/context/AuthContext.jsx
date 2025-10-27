@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   // Login
   const login = async (email, password) => {
     try {
-      const res = await axios.post('https://osusu-backend37us.onrender.com/api/users/login', {
+      const res = await axios.post('https://osusu-backend-37us.onrender.com/api/users/login', {
         email,
         password,
       });
@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }) => {
   // Signup
   const signup = async (name, email, password) => {
     try {
-      const res = await axios.post("http://localhost:4009/api/users/register", {
+      const res = await axios.post("https://osusu-backend-37us.onrender.com/api/users/register", {
         name,
         email,
         password,
