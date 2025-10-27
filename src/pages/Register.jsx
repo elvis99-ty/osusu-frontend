@@ -26,7 +26,7 @@ const Register = () => {
         if (!isFormValid) return;
 
         try {
-            const response = await axios.post('http://localhost:4009/api/users/register', {
+            const response = await axios.post('https://osusu-backend-37us.onrender.com/api/users/register', {
                 name, 
                 email,
                 password,
