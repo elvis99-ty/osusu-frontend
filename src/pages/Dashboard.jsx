@@ -1,139 +1,273 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; 
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import "./Dashboard.css";
+import BalanceCard from "../components/BalanceCard";
+import {
+  FaUser,
+  FaUsers,
+  FaPlusCircle,
+  FaFolderOpen,
+  FaExclamationTriangle,
+  FaUserTimes,
+  FaUsersCog,
+  FaCommentDots,
+  FaExchangeAlt,
+  FaBell,
+  FaCog,
+  FaSignOutAlt,
+} from "react-icons/fa";
 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
 
-// const maskAccountNumber = (accountNumber) => {
-//   if (!accountNumber) {
-//     return 'N/A';
-//   }
-//   const accStr = String(accountNumber); 
+// 👉 Import sections
+import ProfileSection from "./DashboardSections/ProfileSection";
+import JoinGroupSection from "./DashboardSections/JoinGroupSection";
+import ViewGroupsSection from "./DashboardSections/ViewGroupsSection";
+import ReportUserSection from "./DashboardSections/ReportUserSection";
+import ReportGroupSection from "./DashboardSections/ReportGroupSection";
+import TransactionHistory from "./DashboardSections/TransactionHistory";
+import Notifications from "./DashboardSections/Notifications";
 
-//   if (accStr.length <= 6) { 
-//     return accStr;
-//   }
-//   const firstThree = accStr.slice(0, 3);
-//   const lastThree = accStr.slice(-3);
-//   const maskedMiddle = 'X'.repeat(accStr.length - 6); 
-//   return `${firstThree}${maskedMiddle}${lastThree}`;
-// };
-
-
-const Dashboard = () => {
-  const { user, token, isAuthenticated, logout } = useAuth();
+const LoadingWrapper = ({ title, children }) => {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [openAccordion, setOpenAccordion] = useState(null); 
-  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!isAuthenticated || !user || !token) {
-        setLoading(false);
-        if (!token) navigate('/login');
-        return;
-      }
-      
-      setLoading(false); 
-    };
+    setLoading(true);
+    const timer = setTimeout(() => setLoading(false), 1200);
+    return () => clearTimeout(timer);
+  }, [title]);
 
-    if (isAuthenticated && user && token) {
-      fetchDashboardData();
-    } else {
-      setLoading(false);
-      if (!token) {
-        navigate('/login');
-      }
+  return (
+    <div className="fade-container">
+      {loading ? (
+        <div className="spinner-container">
+          <div className="spinner"></div>
+          <p>Loading {title}…</p>
+        </div>
+      ) : (
+        <div className="fade-in">{children}</div>
+      )}
+    </div>
+  );
+};
+
+// ✅ Dummy chart data
+const barData = [
+  { name: "Jan", contributions: 4000 },
+  { name: "Feb", contributions: 3000 },
+  { name: "Mar", contributions: 5000 },
+  { name: "Apr", contributions: 2780 },
+  { name: "May", contributions: 4890 },
+];
+
+const pieData = [
+  { name: "Savings", value: 4000 },
+  { name: "Loans", value: 3000 },
+  { name: "Expenses", value: 2000 },
+];
+
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28"];
+
+const Dashboard = () => {
+  const { user, logout } = useAuth();
+  const [activeMenu, setActiveMenu] = useState("dashboard");
+  const [openGroups, setOpenGroups] = useState(false);
+  const [openDisputes, setOpenDisputes] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [balance] = useState(50000000); // Example balance
+
+  // Currency formatter
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+    }).format(amount);
+  };
+
+  const renderContent = () => {
+    switch (activeMenu) {
+      case "profile":
+        return <ProfileSection />;
+      case "join-group":
+        return <JoinGroupSection />;
+      case "view-groups":
+        return <ViewGroupsSection />;
+      case "report-user":
+        return <ReportUserSection />;
+      case "report-group":
+        return <ReportGroupSection />;
+      case "general-complaint":
+        return <h1 className="dashboard-title">General Complaint</h1>;
+      case "transactions":
+        return <TransactionHistory />;
+      case "notifications":
+        return <Notifications onUnreadChange={setUnreadCount} />;
+      default:
+        return (
+          <div>
+            {/* ✅ Greeting */}
+            <h1 className="dashboard-title">
+              Welcome, {user?.name || "User"} 👋
+            </h1>
+            
+            {/* ✅ Balance card under greeting */}
+            <div className="dashboard-balance-wrapper mb-10">
+              <BalanceCard balance={formatCurrency(balance)} />
+            </div>
+
+            {/* ✅ Dashboard graphs */}
+            <div className="dashboard-charts grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Bar Chart */}
+              <div className="chart-card">
+                <h2 className="chart-title">Contribution Trends</h2>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={barData}>
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="contributions" fill="#8884d8" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Pie Chart */}
+              <div className="chart-card">
+                <h2 className="chart-title">Spending Breakdown</h2>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <button
+            className="floating-btn"
+            onClick={() =>console.log("Create Group Clicked")}
+            >
+              <FaPlusCircle size={28}/> 
+            </button>
+          </div>
+        );
     }
-  }, [isAuthenticated, user, token, navigate, logout]);
-
-  const toggleAccordion = (index) => {
-    setOpenAccordion(openAccordion === index ? null : index);
   };
-
-  const handleViewOpenGroupsClick = () => {
-    navigate('/groups');
-  };
-
-  const handleCreateGroupClick = () => {
-    navigate('/create-group');
-  };
-
-  const handleMyGroupsClick = () => {
-    navigate('/my-groups');
-  };
-
-  if (loading) {
-    return <div className="loading-message">Loading your dashboard data...</div>;
-  }
-
-  if (error && isAuthenticated) { 
-    return <div className="error-message">{error}</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <div className="info-message">Please log in to view your dashboard.</div>;
-  }
-
 
   return (
     <div className="dashboard-container">
-      <div className="dashboard-header">
-        <h1>Welcome, {user?.name || 'User'}!</h1>
-        <p>Manage your Susu contribution circles efficiently.</p>
-      </div>
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <h2
+          className={`sidebar-title big-title ${
+            activeMenu === "dashboard" ? "active" : ""
+          }`}
+          onClick={() => setActiveMenu("dashboard")}
+        >
+          DASHBOARD
+        </h2>
 
-      <div className="dashboard-sections">
-        <div className="dashboard-card profile-card user-summary-card">
-          <div className="card-header-main">
-            <span className="card-logo">SusuFlow</span>
-            <h2 className="user-card-name">{user?.name || 'User Name'}</h2>
-          </div>
-          
-          <div className="card-details-main"> 
-            <p className="user-card-email"><i className="fas fa-envelope icon"></i> {user?.email || 'N/A'}</p>
-            <p className="user-card-phone"><i className="fas fa-phone-alt icon"></i> {user?.phone || 'N/A'}</p>
-            <p className="user-card-bank-name"><i className="fas fa-university icon"></i> {user?.bankName || 'N/A'}</p>
-            
-          </div>
+        <ul className="sidebar-menu">
+          <li
+            className={activeMenu === "profile" ? "active" : ""}
+            onClick={() => setActiveMenu("profile")}
+          >
+            <FaUser className="icon" /> Profile
+          </li>
 
-          <div className="card-footer-actions">
-            <button onClick={logout} className="logout-button-on-card">
-              <i className="fas fa-sign-out-alt icon"></i> Logout
-            </button>
-          </div>
-        </div>
+          <li onClick={() => setOpenGroups(!openGroups)}>
+            <FaUsers className="icon" /> Groups
+          </li>
+          {openGroups && (
+            <ul className="submenu">
+              <li
+                className={activeMenu === "join-group" ? "active" : ""}
+                onClick={() => setActiveMenu("join-group")}
+              >
+                <FaPlusCircle className="icon" /> Join Group
+              </li>
+              <li
+                className={activeMenu === "view-groups" ? "active" : ""}
+                onClick={() => setActiveMenu("view-groups")}
+              >
+                <FaFolderOpen className="icon" /> View Groups
+              </li>
+            </ul>
+          )}
 
-        <div className="dashboard-card quick-actions-card">
-          <h3><i className="fas fa-bolt icon-style"></i> Quick Actions</h3>
-          <button className="action-button" onClick={handleCreateGroupClick}>
-            <i className="fas fa-plus icon-left"></i> Create New Group
-          </button>
-          <button className="action-button" onClick={handleViewOpenGroupsClick}>
-            <i className="fas fa-users icon-left"></i> View/Join Open Groups
-          </button>
-          <button className="action-button" onClick={handleMyGroupsClick}>
-            <i className="fas fa-user-friends icon-left"></i> My Groups
-          </button>
-        </div>
-        
-        <div className="dashboard-card payment-history-card">
-          <h3><i className="fas fa-history icon-style"></i> Payment History</h3>
-          <p>Recent payments will appear here.</p>
-          <div className="accordion-item">
-            <div className="accordion-header" onClick={() => toggleAccordion('payments')}>
-              <h4>Show All Payments</h4>
-              <span>{openAccordion === 'payments' ? <i className="fas fa-chevron-up"></i> : <i className="fas fa-chevron-down"></i>}</span>
-            </div>
-            {openAccordion === 'payments' && (
-              <div className="accordion-content">
-                <p className="info-message">No payment history available yet.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+          <li onClick={() => setOpenDisputes(!openDisputes)}>
+            <FaExclamationTriangle className="icon" /> Dispute Center
+          </li>
+          {openDisputes && (
+            <ul className="submenu">
+              <li
+                className={activeMenu === "report-user" ? "active" : ""}
+                onClick={() => setActiveMenu("report-user")}
+              >
+                <FaUserTimes className="icon" /> Report User
+              </li>
+              <li
+                className={activeMenu === "report-group" ? "active" : ""}
+                onClick={() => setActiveMenu("report-group")}
+              >
+                <FaUsersCog className="icon" /> Report Group
+              </li>
+              <li
+                className={activeMenu === "general-complaint" ? "active" : ""}
+                onClick={() => setActiveMenu("general-complaint")}
+              >
+                <FaCommentDots className="icon" /> General Complaint
+              </li>
+            </ul>
+          )}
+
+          <li
+            className={activeMenu === "transactions" ? "active" : ""}
+            onClick={() => setActiveMenu("transactions")}
+          >
+            <FaExchangeAlt className="icon" /> Transactions
+          </li>
+
+          <li
+            className={activeMenu === "notifications" ? "active" : ""}
+            onClick={() => setActiveMenu("notifications")}
+          >
+            <FaBell className="icon" /> Notifications
+            {unreadCount > 0 && ` (${unreadCount})`}
+          </li>
+        </ul>
+
+        <button className="logout-btn" onClick={logout}>
+          <FaSignOutAlt className="icon" /> Logout
+        </button>
+      </aside>
+
+      {/* Main content */}
+      <main className="main-content">
+        <LoadingWrapper title={activeMenu}>{renderContent()}</LoadingWrapper>
+      </main>
     </div>
   );
 };

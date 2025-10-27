@@ -1,139 +1,138 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
-let REACT_APP_API_URL = import.meta.env.VITE_API_URL
-
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    phone: '',
-    accountNumber: '',
-    bankName: ''
-  });
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+    const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setMessage('');
-    setError('');
+    const isFormValid =
+        name.trim().length >= 2 &&
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+        password.length >= 6 &&
+        password === confirmPassword;
 
-    try {
-      const response = await axios.post(`${REACT_APP_API_URL}/users/register`, formData);
-      setMessage(response.data.message + " You can now login.");
-      setFormData({ // Clear form on successful registration
-        name: '',
-        email: '',
-        password: '',
-        phone: '',
-        accountNumber: '',
-        bankName: ''
-      });
-    } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
-      console.error('Registration error:', err);
-    }
-  };
+    const togglePasswordVisibility = () => setShowPassword(!showPassword);
+    
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!isFormValid) return;
 
-  return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2>Register</h2>
-        <form onSubmit={handleSubmit} className="auth-form">
-          {message && <p className="success-message">{message}</p>}
-          {error && <p className="error-message">{error}</p>}
-          
-          <div className="form-group">
-            <label htmlFor="name">Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              placeholder="Enter your name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="phone">Phone Number</label>
-            <input
-              type="tel" // Changed to type="tel" for phone numbers
-              id="phone"
-              name="phone"
-              placeholder="Enter your phone number"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="accountNumber">Account Number</label>
-            <input
-              type="text"
-              id="accountNumber"
-              name="accountNumber"
-              placeholder="Enter your bank account number"
-              value={formData.accountNumber}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="bankName">Bank Name</label>
-            <input
-              type="text"
-              id="bankName"
-              name="bankName"
-              placeholder="Enter your bank name"
-              value={formData.bankName}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <button type="submit">Register</button>
-        </form>
-        <p className="auth-switch-text">Already have an account? <Link to="/login">Login here</Link></p>
-      </div>
-    </div>
-  );
+        try {
+            const response = await axios.post('http://localhost:4009/api/users/register', {
+                name, 
+                email,
+                password,
+                password2: confirmPassword,
+            });
+
+            if (response.status === 201) {
+                setSuccessMessage('🎉 Registration successful! Redirecting to login...');
+                setErrorMessage('');
+                setTimeout(() => navigate('/login'), 2000);
+            }
+        } catch (error) {
+            console.error('Registration failed:', error.response ? error.response.data : error);
+            const message = error.response?.data?.message || 'Registration failed. Please try again.';
+            setErrorMessage(message);
+            setSuccessMessage('');
+        }
+    };
+
+    return (
+        <div className="register-container">
+            <h2>Register</h2>
+
+            <form onSubmit={handleSubmit} className="register-form">
+                {/* Name */}
+                <div className="form-group">
+                    <label>Name</label>
+                    <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                    />
+                    {name && name.trim().length < 2 && (
+                        <small className="error-text">Name must be at least 2 characters</small>
+                    )}
+                </div>
+
+                {/* Email */}
+                <div className="form-group">
+                    <label>Email</label>
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
+                    {email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
+                        <small className="error-text">Enter a valid email address</small>
+                    )}
+                </div>
+
+                {/* Password */}
+                <div className="form-group password-group">
+                    <label>Password</label>
+                    <div className="password-wrapper">
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                        <span onClick={togglePasswordVisibility} className="eye-icon">
+                            {showPassword ? '🙈' : '👁️'}
+                        </span>
+                    </div>
+                    {password && password.length < 6 && (
+                        <small className="error-text">Password must be at least 6 characters</small>
+                    )}
+                </div>
+
+                {/* Confirm Password */}
+                <div className="form-group password-group">
+                    <label>Confirm Password</label>
+                    <div className="password-wrapper">
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            onCopy={(e) => e.preventDefault()}
+                            onCut={(e) => e.preventDefault()}
+                            onPaste={(e) => e.preventDefault()}
+                            required
+                        />
+                        <span onClick={togglePasswordVisibility} className="eye-icon">
+                            {showPassword ? '🙈' : '👁️'}
+                        </span>
+                    </div>
+                    {confirmPassword && password !== confirmPassword && (
+                        <small className="error-text">Passwords do not match</small>
+                    )}
+                </div>
+
+                <button type="submit" className="submit-btn" disabled={!isFormValid}>
+                    Register
+                </button>
+
+                {successMessage && <div className="success-text">{successMessage}</div>}
+                {errorMessage && <div className="error-text">{errorMessage}</div>}
+            </form>
+
+            <div className="login-redirect">
+                <p>Already have an account? <Link to="/login" className="login-link">Login here</Link></p>
+            </div>
+        </div>
+    );
 };
 
 export default Register;

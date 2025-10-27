@@ -1,55 +1,96 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-let REACT_APP_API_URL = import.meta.env.VITE_API_URL
+import React, { createContext, useContext, useState, useEffect } from "react";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
-const AuthContext = createContext(null);
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem('token'));
-  const [user, setUser] = useState(null); 
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem("token") || null);
   const [loading, setLoading] = useState(true);
 
-  
+  // Decode token + set axios header
   useEffect(() => {
-    const loadUser = async () => {
-      if (token) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        try {
-          const response = await axios.get(`${REACT_APP_API_URL}/users/profile`);
-          setUser(response.data);
-        } catch (error) {
-          console.error('Token validation failed during profile fetch:', error.response?.data || error.message);
-          setToken(null);
-          setUser(null);
-          localStorage.removeItem('token');
-          delete axios.defaults.headers.common['Authorization'];
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const now = Date.now() / 1000;
+        if (decoded.exp && decoded.exp < now) {
+          logout();
+        } else {
+          // 🟢 Keep user if already set from login response
+          if (!user) setUser(decoded);
+          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         }
-      } else {
-        delete axios.defaults.headers.common['Authorization'];
-        setUser(null);
+      } catch (error) {
+        console.error("Invalid token:", error);
+        logout();
       }
-      setLoading(false);
-    };
-
-    loadUser();
+    } else {
+      delete axios.defaults.headers.common["Authorization"];
+    }
+    setLoading(false);
   }, [token]);
 
-  const login = (newToken) => {
-    setToken(newToken);
-    localStorage.setItem('token', newToken);
+  // Login
+  const login = async (email, password) => {
+    try {
+      const res = await axios.post("http://localhost:4009/api/users/login", {
+        email,
+        password,
+      });
+
+      const jwt = res.data.token;
+      const loggedInUser = res.data.user; // 🟢 full user object from backend
+
+      localStorage.setItem("token", jwt);
+      setToken(jwt);
+      setUser(loggedInUser); // 🟢 store actual user with name/email/etc.
+
+      axios.defaults.headers.common["Authorization"] = `Bearer ${jwt}`;
+
+      return { success: true, user: loggedInUser };
+    } catch (err) {
+      console.error("Login failed:", err.response?.data || err.message);
+      return {
+        success: false,
+        message: err.response?.data?.message || "Login failed",
+      };
+    }
   };
 
+  // Signup
+  const signup = async (name, email, password) => {
+    try {
+      const res = await axios.post("http://localhost:4009/api/users/register", {
+        name,
+        email,
+        password,
+      });
+      return { success: true, data: res.data };
+    } catch (err) {
+      console.error("Signup failed:", err.response?.data || err.message);
+      return {
+        success: false,
+        message: err.response?.data?.message || "Signup failed",
+      };
+    }
+  };
+
+  // Logout
   const logout = () => {
+    localStorage.removeItem("token");
     setToken(null);
-    localStorage.removeItem('token');
+    setUser(null);
+    delete axios.defaults.headers.common["Authorization"];
   };
 
-  if (loading) {
-    return <div className="loading-app-screen">Loading application...</div>;
-  }
+  const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout, isAuthenticated: !!token, loading }}>
+    <AuthContext.Provider
+      value={{ user, token, isAuthenticated, login, signup, logout, loading }}
+    >
       {children}
     </AuthContext.Provider>
   );

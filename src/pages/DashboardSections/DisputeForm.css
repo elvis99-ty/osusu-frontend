@@ -1,0 +1,89 @@
+.dispute-form {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.dispute-form h2 {
+  font-size: 1.4rem;
+  margin-bottom: 15px;
+  color: #333;
+  text-align: center;
+}
+
+.dispute-form label {
+  display: block;
+  font-weight: 600;
+  margin: 12px 0 6px;
+  color: #444;
+}
+
+.dispute-form input,
+.dispute-form select,
+.dispute-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.dispute-form input:focus,
+.dispute-form select:focus,
+.dispute-form textarea:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.dispute-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.dispute-form input[type="file"] {
+  border: none;
+  padding: 6px 0;
+}
+
+.submit-btn {
+  margin-top: 15px;
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s ease-in-out;
+}
+
+.submit-btn:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0056b3, #004494);
+}
+
+.form-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 15px 0;
+}
+
+.form-spinner .spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #ccc;
+  border-top: 3px solid #007bff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
